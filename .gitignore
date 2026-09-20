@@ -1,0 +1,16 @@
+# Compiled binary
+blog-aggregator
+
+# Go test binaries and coverage
+*.test
+*.out
+coverage.*
+
+# Local environment files
+.env
+.env.*
+
+# Editor/OS files
+.vscode/
+.idea/
+.DS_Store
