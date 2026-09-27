@@ -2,31 +2,56 @@ package main
 
 import(
 "fmt"
+"os"
+"database/sql"
 "blog-aggregator/internal/config"
+"blog-aggregator/internal/database"
+_ "github.com/lib/pq"
 )
 
 
 
-
 func main() {
-	var c config.Config
-	cfg, err := c.ReadFile()
+	cfg, err := config.ReadFile()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	newCfg, err := cfg.SetUser("Grimahed")
+	db, err := sql.Open("postgres", cfg.Db_url)
 	if err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(1)
 	}
-	cfg2, err := newCfg.ReadFile()
-	if err != nil {
-                fmt.Println(err)
-                return
-        }
-	fmt.Println(cfg2)
-	fmt.Println("I compiled :)")
+	dbQueries := database.New(db)
 
+	s := state{
+		db: dbQueries,
+		cfg: &cfg,
+	}
+	cmd := commands{
+		Commands: make(map[string]func(*state, command) error),
+		}
+	com := command{}
+
+	cmd.register("login", handlerLogin)
+	cmd.register("register", handlerRegisterUser)
+	cmd.register("reset", handlerReset)
+	cmd.register("users", handlerUsers)
+	cmd.register("agg", handlerAgg)
+
+	if len(os.Args) < 2 {
+		fmt.Println("I NEED a command first")
+		os.Exit(1)
+	}
+
+	com = command {
+		name: os.Args[1],
+		args: os.Args[2:],
+		}
+
+	if err := cmd.run(&s, com); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
