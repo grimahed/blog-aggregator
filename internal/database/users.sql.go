@@ -7,7 +7,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -33,8 +32,8 @@ type CreateFeedParams struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Name      string
-	Url       sql.NullString
-	UserID    uuid.NullUUID
+	Url       string
+	UserID    uuid.UUID
 }
 
 func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, error) {

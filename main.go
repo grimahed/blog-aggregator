@@ -39,7 +39,7 @@ func main() {
 	cmd.register("reset", handlerReset)
 	cmd.register("users", handlerUsers)
 	cmd.register("agg", handlerAgg)
-
+	cmd.register("addfeed", handlerAddFeed)
 	if len(os.Args) < 2 {
 		fmt.Println("I NEED a command first")
 		os.Exit(1)
