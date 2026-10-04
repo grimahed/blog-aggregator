@@ -100,7 +100,7 @@ func handlerAddFeed(s *state, cmd command) error {
 		return err
 	}
 
-	whyTheFUCKcanINotDoThisInTheSig := database.CreateFeedParams{
+	newFeed := database.CreateFeedParams{
                         ID: uuid.New(),
                         CreatedAt: time.Now(),
                         UpdatedAt: time.Now(),
@@ -108,12 +108,85 @@ func handlerAddFeed(s *state, cmd command) error {
                         Url: feedURL,
 			UserID: user.ID,
                 }
-	builtfeed, err := s.db.CreateFeed(context.Background(),
-			whyTheFUCKcanINotDoThisInTheSig) //because you'd give everyone a
-	if err != nil {					 //headache trying to read it
+	builtFeed, err := s.db.CreateFeed(context.Background(), newFeed)
+	if err != nil {
 		return err
 	}
 
-	fmt.Println(builtfeed)
+	folParams := database.CreateFeedFollowParams{
+			ID: uuid.New(),
+			CreatedAt: newFeed.CreatedAt,
+			UpdatedAt: newFeed.UpdatedAt,
+			UserID: newFeed.UserID,
+			FeedID: newFeed.ID,
+	}
+
+	if _, err := s.db.CreateFeedFollow(context.Background(), folParams); err != nil {
+		return err
+	}
+	fmt.Println(builtFeed)
+return nil
+}
+
+
+func handlerFeeds(s *state, cmd command) error {
+
+	feeds, err := s.db.GetAllFeedsWithUserName(context.Background())
+	if err != nil {
+		return err
+	}
+
+	for i := range feeds {
+		fmt.Printf("%+v\n", feeds[i])
+	}
+
+return nil
+}
+
+func handlerFollow(s *state, cmd command) error {
+	if len(cmd.args) == 0 {
+		return errors.New("Will Argue about anything for $1")
+	}
+
+	user, err := s.db.GetUser(context.Background(), s.cfg.Current_user_name)
+	if err != nil {
+		return err
+	}
+
+	feed, err := s.db.GetFeed(context.Background(), cmd.args[0])
+	if err != nil {
+		return err
+	}
+
+	params := database.CreateFeedFollowParams{
+			ID: uuid.New(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			UserID: user.ID,
+			FeedID: feed.ID,
+	}
+
+	followRow, err := s.db.CreateFeedFollow(context.Background(), params)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%v, %s\n", followRow.NameOfFeed, followRow.NameOfUser)
+return nil
+}
+
+func handlerFollowing(s *state, cmd command) error {
+	user, err := s.db.GetUser(context.Background(), s.cfg.Current_user_name)
+	if err != nil {
+		return err
+	}
+
+	following, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
+	if err != nil {
+		return err
+	}
+	for i := range following {
+	fmt.Println(following[i].FeedName)
+	}
 return nil
 }

@@ -40,6 +40,10 @@ func main() {
 	cmd.register("users", handlerUsers)
 	cmd.register("agg", handlerAgg)
 	cmd.register("addfeed", handlerAddFeed)
+	cmd.register("feeds", handlerFeeds)
+	cmd.register("follow", handlerFollow)
+	cmd.register("following", handlerFollowing)
+
 	if len(os.Args) < 2 {
 		fmt.Println("I NEED a command first")
 		os.Exit(1)
