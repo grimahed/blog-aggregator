@@ -87,18 +87,13 @@ func handlerAgg(s *state, cmd command) error {
 return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) < 2 {
 		return errors.New("Not enough args")
 	}
 
 	var feedName string = cmd.args[0]
 	var feedURL string = cmd.args[1]
-
-	user, err := s.db.GetUser(context.Background(), s.cfg.Current_user_name)
-	if err != nil {
-		return err
-	}
 
 	newFeed := database.CreateFeedParams{
                         ID: uuid.New(),
@@ -143,14 +138,9 @@ func handlerFeeds(s *state, cmd command) error {
 return nil
 }
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.args) == 0 {
 		return errors.New("Will Argue about anything for $1")
-	}
-
-	user, err := s.db.GetUser(context.Background(), s.cfg.Current_user_name)
-	if err != nil {
-		return err
 	}
 
 	feed, err := s.db.GetFeed(context.Background(), cmd.args[0])
@@ -175,11 +165,7 @@ func handlerFollow(s *state, cmd command) error {
 return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
-	user, err := s.db.GetUser(context.Background(), s.cfg.Current_user_name)
-	if err != nil {
-		return err
-	}
+func handlerFollowing(s *state, cmd command, user database.User) error {
 
 	following, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
 	if err != nil {
@@ -188,5 +174,26 @@ func handlerFollowing(s *state, cmd command) error {
 	for i := range following {
 	fmt.Println(following[i].FeedName)
 	}
+return nil
+}
+
+func handlerUnfollow(s *state, cmd command, user database.User) error {
+
+if len(cmd.args) == 0 {
+	return errors.New("I will make you argue")
+}
+
+	feed, err := s.db.GetFeed(context.Background(), cmd.args[0])
+	if err != nil {
+		return err
+	}
+
+	params := database.UnfollowParams{
+		UserID: user.ID,
+		FeedID: feed.ID,
+	}
+
+	s.db.Unfollow(context.Background(), params)
+
 return nil
 }

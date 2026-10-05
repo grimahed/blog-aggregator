@@ -39,10 +39,11 @@ func main() {
 	cmd.register("reset", handlerReset)
 	cmd.register("users", handlerUsers)
 	cmd.register("agg", handlerAgg)
-	cmd.register("addfeed", handlerAddFeed)
+	cmd.register("addfeed", LoggedIn(handlerAddFeed))
 	cmd.register("feeds", handlerFeeds)
-	cmd.register("follow", handlerFollow)
-	cmd.register("following", handlerFollowing)
+	cmd.register("follow", LoggedIn(handlerFollow))
+	cmd.register("following", LoggedIn(handlerFollowing))
+	cmd.register("unfollow", LoggedIn(handlerUnfollow))
 
 	if len(os.Args) < 2 {
 		fmt.Println("I NEED a command first")

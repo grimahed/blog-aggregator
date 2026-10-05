@@ -6,6 +6,7 @@ import (
 "errors"
 "fmt"
 "time"
+"log"
 "context"
 "net/http"
 "io"
@@ -102,4 +103,14 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 		feed.Channel.Item[i].Title = html.UnescapeString(feed.Channel.Item[i].Description)
 	}
 return &feed, nil
+}
+
+func LoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
+	return func(s *state, cmd command) error {
+		user, err := s.db.GetUser(context.Background(), s.cfg.Current_user_name)
+		if err != nil {
+			log.Fatal("failed to fetch user", err)
+		}
+		return handler(s, cmd, user)
+	}
 }
