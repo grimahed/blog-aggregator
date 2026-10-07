@@ -100,7 +100,7 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	feed.Channel.Description = html.UnescapeString(feed.Channel.Description)
 	for i := range feed.Channel.Item {
 		feed.Channel.Item[i].Title = html.UnescapeString(feed.Channel.Item[i].Title)
-		feed.Channel.Item[i].Title = html.UnescapeString(feed.Channel.Item[i].Description)
+		feed.Channel.Item[i].Description = html.UnescapeString(feed.Channel.Item[i].Description)
 	}
 return &feed, nil
 }
@@ -114,3 +114,37 @@ func LoggedIn(handler func(s *state, cmd command, user database.User) error) fun
 		return handler(s, cmd, user)
 	}
 }
+
+func scrapeFeeds(s *state) error {
+
+
+		feed, err := s.db.GetNextFeedToFetch(context.Background())
+		if err != nil {
+			return err
+		}
+
+		markedFeed, err := s.db.MarkFeedFetched(context.Background(), feed.ID)
+		if err != nil {
+			return err
+		}
+
+
+		/* nullTime := sql.NullTime{
+				Time: time.Now(),
+				Valid: true,
+		}
+
+		markedFeed.LastFetchedAt = nullTime
+		markedFeed.UpdatedAt = time.Now() */
+
+		fetchedFeed, err := fetchFeed(context.Background(), markedFeed.Url)
+		if err != nil {
+			return err
+		}
+
+		for j := range fetchedFeed.Channel.Item {
+		fmt.Println(fetchedFeed.Channel.Item[j].Title)
+		}
+return nil
+}
+

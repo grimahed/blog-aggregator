@@ -10,6 +10,7 @@ import (
 "log"
 )
 
+const dummyURL = "https://news.ycombinator.com/rss"
 
 func handlerLogin(s *state, cmd command) error {
         if len(cmd.args) == 0 {
@@ -77,13 +78,25 @@ return nil
 }
 
 func handlerAgg(s *state, cmd command) error {
-        dummyURL := "https://www.wagslane.dev/index.xml"
+if len(cmd.args) == 0 {
+	return errors.New("Need an arg like 1m or 30s")
+}
 
-        feed, err := fetchFeed(context.Background(), dummyURL)
-        if err != nil {
-                return err
+	reqTimer := cmd.args[0]
+
+	reqDur, err := time.ParseDuration(reqTimer)
+	if err != nil {
+		return nil
+	}
+
+	fmt.Printf("Collecting feeds every %v\n\n", reqTimer)
+
+	ticker := time.NewTicker(reqDur)
+
+	for ; ; <-ticker.C {
+        	scrapeFeeds(s)
         }
-        fmt.Println(feed)
+
 return nil
 }
 
