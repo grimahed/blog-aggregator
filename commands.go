@@ -3,6 +3,9 @@ package main
 import (
 "blog-aggregator/internal/config"
 "blog-aggregator/internal/database"
+"github.com/google/uuid"
+"github.com/lib/pq"
+"database/sql"
 "errors"
 "fmt"
 "time"
@@ -129,21 +132,45 @@ func scrapeFeeds(s *state) error {
 		}
 
 
-		/* nullTime := sql.NullTime{
-				Time: time.Now(),
-				Valid: true,
-		}
-
-		markedFeed.LastFetchedAt = nullTime
-		markedFeed.UpdatedAt = time.Now() */
-
 		fetchedFeed, err := fetchFeed(context.Background(), markedFeed.Url)
 		if err != nil {
 			return err
 		}
 
 		for j := range fetchedFeed.Channel.Item {
-		fmt.Println(fetchedFeed.Channel.Item[j].Title)
+			nullDesc := sql.NullString{}
+
+			if fetchedFeed.Channel.Item[j].Description != "" {
+					nullDesc.String = fetchedFeed.Channel.Item[j].Description
+					nullDesc.Valid = true
+			}
+
+			nullTime := sql.NullTime{}
+			parsedTime, err := time.Parse(time.DateTime, fetchedFeed.Channel.Item[j].PubDate)
+			if err == nil {
+				nullTime.Time = parsedTime
+				nullTime.Valid = true
+			}
+
+			newPost := database.CreatePostParams{
+					ID: uuid.New(),
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+					Title: fetchedFeed.Channel.Item[j].Title,
+					Description: nullDesc,
+					PublishedAt: nullTime,
+					FeedID: feed.ID,
+			}
+
+		_, err = s.db.CreatePost(context.Background(), newPost)
+		if err != nil {
+			pgErr, kindaValid := err.(*pq.Error)
+			if kindaValid && pgErr.Code == "23505" {
+				continue
+			} else {
+			log.Println(err)
+			}
+		}
 		}
 return nil
 }

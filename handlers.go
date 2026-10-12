@@ -3,7 +3,9 @@ package main
 import (
 "blog-aggregator/internal/database"
 "github.com/google/uuid"
+"github.com/lib/pq"
 "errors"
+"strconv"
 "fmt"
 "time"
 "context"
@@ -169,12 +171,17 @@ func handlerFollow(s *state, cmd command, user database.User) error {
 			FeedID: feed.ID,
 	}
 
-	followRow, err := s.db.CreateFeedFollow(context.Background(), params)
+	_, err = s.db.CreateFeedFollow(context.Background(), params)
 	if err != nil {
-		return err
-	}
+                pgErr, kindaValid := err.(*pq.Error)
 
-	fmt.Printf("%v, %s\n", followRow.NameOfFeed, followRow.NameOfUser)
+                if kindaValid && pgErr.Code == "23505" {
+			fmt.Printf("%v, %s\n", user.Name, feed.Name)
+                } else {
+                        return err
+                }
+        }
+
 return nil
 }
 
@@ -207,6 +214,32 @@ if len(cmd.args) == 0 {
 	}
 
 	s.db.Unfollow(context.Background(), params)
+
+return nil
+}
+
+func handlerBrowse(s *state, cmd command, user database.User) error {
+	uParams := database.GetPostsForUserParams{
+			UserID: user.ID,
+			Limit: 2,
+	}
+
+	if len(cmd.args) > 0 {
+		imaRealInt, err := strconv.ParseInt(cmd.args[0], 10, 32)
+		if err != nil {
+			return err
+		}
+		realInt := int32(imaRealInt)
+		uParams.Limit = realInt
+	}
+
+	posts, err := s.db.GetPostsForUser(context.Background(), uParams)
+	if err != nil {
+		return err
+	}
+	for i := range posts {
+		fmt.Println(posts[i])
+	}
 
 return nil
 }

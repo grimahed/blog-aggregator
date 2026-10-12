@@ -11,7 +11,7 @@ CREATE TABLE feeds (
 	created_at TIMESTAMP NOT NULL,
 	updated_at TIMESTAMP NOT NULL,
 	last_fetched_at TIMESTAMP,
-	name TEXT NOT NULL,
+	name TEXT UNIQUE NOT NULL,
 	url TEXT UNIQUE NOT NULL,
 	user_id UUID NOT NULL,
 	CONSTRAINT fk_user_id
@@ -31,7 +31,22 @@ CREATE TABLE feed_follows (
 	CONSTRAINT user_feed UNIQUE (user_id, feed_id)
 );
 
+CREATE TABLE posts (
+
+	id UUID PRIMARY KEY,
+	created_at TIMESTAMP NOT NULL,
+	updated_at TIMESTAMP NOT NULL,
+	title TEXT NOT NULL,
+	url TEXT UNIQUE NOT NULL,
+	description TEXT,
+	published_at TIMESTAMP,
+	feed_id UUID NOT NULL,
+	CONSTRAINT fk_feed_id
+	  FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
+);
+
 -- +goose Down
+DROP TABLE posts;
 DROP TABLE feed_follows;
 DROP TABLE feeds;
 DROP TABLE users;

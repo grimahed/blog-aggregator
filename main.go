@@ -44,6 +44,7 @@ func main() {
 	cmd.register("follow", LoggedIn(handlerFollow))
 	cmd.register("following", LoggedIn(handlerFollowing))
 	cmd.register("unfollow", LoggedIn(handlerUnfollow))
+	cmd.register("browse", LoggedIn(handlerBrowse))
 
 	if len(os.Args) < 2 {
 		fmt.Println("I NEED a command first")
